@@ -51,7 +51,7 @@ public class Conexao {
 		idpessoa = getPessoaSemelhante(col_pessoas, nome);
 		//ArrayList livros_lidos = (ArrayList)cursor.next().get("livros");
 		
-		livro = getIndicacaoLivro(col_pessoas, idpessoa);
+		livro = getIndicacaoLivro(col_pessoas, idpessoa,nome);
 
 		System.out.println(livro);
 		//((Document)((ArrayList) cursor.next().get("ids")).get(0)).get("fator")
@@ -67,13 +67,23 @@ public class Conexao {
 		return (String) ((Document)list_semelhante.get(0)).get("idp");
 	
 	}
-	public static String getIndicacaoLivro(MongoCollection<Document> col_pessoas, String idpessoa){
+	public static String getIndicacaoLivro(MongoCollection<Document> col_pessoas, String idpessoa, String nome){
+		MongoCursor<Document> cursor = col_pessoas.find(new Document("nome", nome)).iterator();
+		ArrayList livros_lidos = (ArrayList)cursor.next().get("livro");
 		
-		MongoCursor<Document> cursor = col_pessoas.find(new Document("id", idpessoa)).iterator();
-		ArrayList list_livro = (ArrayList) cursor.next().get("livro");
+		MongoCursor<Document> cursor_semelhante = col_pessoas.find(new Document("id", idpessoa)).iterator();
+		ArrayList list_livro = (ArrayList) cursor_semelhante.next().get("livro");
 		ComparatorNota comparatorlivro = new ComparatorNota();
 		Collections.sort(list_livro, comparatorlivro);
-		return (String) ((Document)list_livro.get(0)).get("titulo");
+	
+		for(int i = 0; i < list_livro.size(); i++){
+			if(!livros_lidos.contains((String) ((Document)list_livro.get(i)).get("titulo"))){
+				return (String) ((Document)list_livro.get(i)).get("titulo");
+			}
+		}
+		return null;
+
+	
 		
 	}
 	public static String getIndicacaoFilme(MongoCollection<Document> col_pessoas, String idpessoa){
