@@ -78,8 +78,10 @@ public class Conexao {
 	
 		
 		for(int i = 0; i < list_livro.size(); i++){
-			if(!livros_lidos.contains((String) ((Document)list_livro.get(i)).get("titulo"))){
-				return (String) ((Document)list_livro.get(i)).get("titulo");
+			for(int j = 0; j < livros_lidos.size();j++){
+				if(!((String) ((Document)livros_lidos.get(j)).get("titulo")).equals((String) ((Document)list_livro.get(i)).get("titulo"))){
+					return (String) ((Document)list_livro.get(i)).get("titulo");
+				}	
 			}
 		}
 		return null;
