@@ -76,6 +76,7 @@ public class Conexao {
 		ComparatorNota comparatorlivro = new ComparatorNota();
 		Collections.sort(list_livro, comparatorlivro);
 	
+		
 		for(int i = 0; i < list_livro.size(); i++){
 			if(!livros_lidos.contains((String) ((Document)list_livro.get(i)).get("titulo"))){
 				return (String) ((Document)list_livro.get(i)).get("titulo");
