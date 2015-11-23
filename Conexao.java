@@ -94,7 +94,7 @@ public class Conexao {
 		ArrayList list_semelhante = (ArrayList) pessoa_atual.get("similar");
 		ComparatorDoc comparator = new ComparatorDoc();
 		Collections.sort(list_semelhante, comparator);
-		return (String) ((Document)list_semelhante.get(0)).get("idp"); //mudar para o que tiver no documento
+		return (String) ((Document)list_semelhante.get(0)).get("id"); //mudar para o que tiver no documento
 	
 	}
 	public static String getIndicacaoLivro(MongoCollection<Document> col_pessoas, String idpessoa, String id){
@@ -212,13 +212,18 @@ public class Conexao {
 						if(media != 0 && nfilmesuniao != 0 && nfilmesinter != 0){
 							fator = (nfilmes/nfilmesuniao)*(1 - (media/10));
 							
-						}else if(nfilmesinter == 0){
+						}else{
 							fator = 0.0f;
 						}
 						System.out.println("id "+  id + " id_proximo " + id_proximo +"fator" + fator);
 						somaNotas = 0.0f;
 						nfilmesuniao = 0.0f;
 						nfilmesinter = 0.0f;
+						BasicDBObject docToInsert = new BasicDBObject("fator", fator);
+						docToInsert.put("id", id_proximo);
+						BasicDBObject updateQuery = new BasicDBObject("id", id);
+						BasicDBObject updateCommand = new BasicDBObject("$push", new BasicDBObject("pessoas.similar", docToInsert));
+						col_pessoas.updateOne(updateQuery, updateCommand);
 					}
 				}
 			}
