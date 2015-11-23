@@ -75,12 +75,11 @@ public class Conexao {
 		MongoCollection<Document> col_livros =  db.getCollection("livros");
 		MongoCursor<Document> cursor_livro = col_livros.find().iterator();
 		while(cursor_livro.hasNext()){
-			
-			ArrayList livros = (ArrayList)cursor_livro.next().get("autor");
+			Document l = cursor_livro.next();
+			ArrayList livros = (ArrayList)l.get("autor");
 			for(int i = 0; i < livros.size(); i++){
 				if(((String)livros.get(i)).equals((String)(autores.get(0)))){
-					Document d = (Document) ((Document) cursor_livro).get("titulo");
-					System.out.println(d.toString());
+					System.out.println(l.get("titulo"));				
 				}
 			}
 		}
@@ -182,6 +181,9 @@ public class Conexao {
 					String id_proximo = proxima_pessoa.getString("id");
 					ArrayList filmes_pessoa_dois = (ArrayList)proxima_pessoa.get("filme");
 					if(filmes_pessoa_dois.size() != 0){
+						somaNotas = 0.0f;
+						nfilmesuniao = 0.0f;
+						nfilmesinter = 0.0f;
 						for(int i = 0; i < filmes.size(); i++){
 							for(int j = 0; j < filmes_pessoa_dois.size();j++){
 								//sSystem.out.println(((String) ((Document)livros_lidos.get(j)).get("nome")));
@@ -216,9 +218,7 @@ public class Conexao {
 							fator = 0.0f;
 						}
 						System.out.println("id "+  id + " id_proximo " + id_proximo +"fator" + fator);
-						somaNotas = 0.0f;
-						nfilmesuniao = 0.0f;
-						nfilmesinter = 0.0f;
+						
 						BasicDBObject docToInsert = new BasicDBObject("fator", fator);
 						docToInsert.put("id", id_proximo);
 						BasicDBObject updateQuery = new BasicDBObject("id", id);
