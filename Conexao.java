@@ -49,18 +49,18 @@ public class Conexao {
 		
 		//MongoCollection<Document> col_pessoas = db.getCollection("pessoa");
 		MongoCollection<Document> col_pessoas =  db.getCollection("pessoas");
-		//idpessoa = getPessoaSemelhante(col_pessoas, id);
+		idpessoa = getPessoaSemelhante(col_pessoas, id);
 		
-		idpessoa = "279855";
+		//idpessoa = "279855";
 	
-		/*livro = getIndicacaoLivro(col_pessoas, idpessoa,id);
+		livro = getIndicacaoLivro(col_pessoas, idpessoa,id);
 
 		System.out.println(livro);
 		
-		String filme = getIndicacaoFilme(col_pessoas,idpessoa, id);
+		/*String filme = getIndicacaoFilme(col_pessoas,idpessoa, id);
 		System.out.println(filme);*/
 		//((Document)((ArrayList) cursor.next().get("ids")).get(0)).get("fator")
-		calculaSimilaridade(col_pessoas);
+		//calculaSimilaridade(col_pessoas);
 		mongoclient.close();		
 	}
 	public static void getLivroBaseado(MongoDatabase db, String id,MongoCollection<Document> col_pessoas){
@@ -89,10 +89,11 @@ public class Conexao {
 	}
 	public static String getPessoaSemelhante(MongoCollection<Document> col_pessoas, String id){
 		Document pessoa_atual = col_pessoas.find(eq("id",id)).first();
-		
+		System.out.println(pessoa_atual);
 		ArrayList list_semelhante = (ArrayList) pessoa_atual.get("similar");
 		ComparatorDoc comparator = new ComparatorDoc();
 		Collections.sort(list_semelhante, comparator);
+	
 		return (String) ((Document)list_semelhante.get(0)).get("id"); //mudar para o que tiver no documento
 	
 	}
@@ -128,7 +129,8 @@ public class Conexao {
 		
 	}
 	public static String getIndicacaoFilme(MongoCollection<Document> col_pessoas, String idpessoa, String id){
-		int encontrou = 0;
+		int encontrou = 0, nLivros = 0;
+		ArrayList LivroRecomendacao = new ArrayList();
 		Document pessoa_atual = col_pessoas.find(eq("id",id)).first();
 		ArrayList filmes_vistos = (ArrayList)pessoa_atual.get("filme");
 		System.out.println(filmes_vistos);
@@ -148,8 +150,10 @@ public class Conexao {
 					encontrou = 1;
 				}	
 			}
-			if(encontrou == 0)
-				return (String) ((Document)list_filme.get(i)).get("nome");
+			if(encontrou == 0 && nLivros < 6){
+				LivroRecomendacao.add((String) ((Document)list_filme.get(i)).get("nome"));
+				nLivros++;
+			}
 			encontrou = 0;
 		}
 		
@@ -184,6 +188,8 @@ public class Conexao {
 						somaNotas = 0.0f;
 						nfilmesuniao = 0.0f;
 						nfilmesinter = 0.0f;
+						fator = 0.0f;
+						media = 0.0f;
 						for(int i = 0; i < filmes.size(); i++){
 							for(int j = 0; j < filmes_pessoa_dois.size();j++){
 								//sSystem.out.println(((String) ((Document)livros_lidos.get(j)).get("nome")));
@@ -211,19 +217,18 @@ public class Conexao {
 							media = somaNotas/nfilmesinter;	
 						}
 						//System.out.println("media" + media);
-						if(media != 0 && nfilmesuniao != 0 && nfilmesinter != 0){
+						if(nfilmesuniao != 0 && nfilmesinter != 0){
 							fator = (nfilmes/nfilmesuniao)*(1 - (media/10));
-							
 						}else{
 							fator = 0.0f;
 						}
 						System.out.println("id "+  id + " id_proximo " + id_proximo +"fator" + fator);
 						
-						BasicDBObject docToInsert = new BasicDBObject("fator", fator);
+						/*BasicDBObject docToInsert = new BasicDBObject("fator", fator);
 						docToInsert.put("id", id_proximo);
 						BasicDBObject updateQuery = new BasicDBObject("id", id);
 						BasicDBObject updateCommand = new BasicDBObject("$push", new BasicDBObject("pessoas.similar", docToInsert));
-						col_pessoas.updateOne(updateQuery, updateCommand);
+						col_pessoas.updateOne(updateQuery, updateCommand);*/
 					}
 				}
 			}
