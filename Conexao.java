@@ -1,39 +1,19 @@
 package bd_conexao;
-import com.mongodb.client.model.Sorts.*;
-import java.text.DateFormat;
+import static com.mongodb.client.model.Filters.eq;
+import static com.mongodb.client.model.Filters.ne;
+
 import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Comparator;
-import java.util.Iterator;
-import java.util.Locale;
 import java.util.Scanner;
-import static java.util.Arrays.asList;
-
-import java.net.UnknownHostException;
 
 import org.bson.Document;
-import org.bson.conversions.Bson;
 
-import com.mongodb.BasicDBList;
 import com.mongodb.BasicDBObject;
-import com.mongodb.Block;
-import com.mongodb.DBCollection;
-import com.mongodb.DBCursor;
-import com.mongodb.DBObject;
-
-import static com.mongodb.client.model.Filters.*;
-import static com.mongodb.client.model.Sorts.ascending;
-
 import com.mongodb.MongoClient;
-import com.mongodb.QueryBuilder;
-import com.mongodb.client.MongoDatabase;
-import com.mongodb.client.MongoIterable;
-import com.mongodb.client.model.Projections;
-import com.mongodb.client.FindIterable;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoCursor;
+import com.mongodb.client.MongoDatabase;
 
 public class Conexao {
 
@@ -49,18 +29,18 @@ public class Conexao {
 		
 		//MongoCollection<Document> col_pessoas = db.getCollection("pessoa");
 		MongoCollection<Document> col_pessoas =  db.getCollection("pessoas");
-		/*idpessoa = getPessoaSemelhante(col_pessoas, id);
+		idpessoa = getPessoaSemelhante(col_pessoas, id);
 		System.out.println(idpessoa);
 		//idpessoa = "279855";
 	
 		livro = getIndicacaoLivro(col_pessoas, idpessoa,id);
 
-		System.out.println(livro);
+		//System.out.println(livro);
 		
-		/*String filme = getIndicacaoFilme(col_pessoas,idpessoa, id);
-		System.out.println(filme);*/
+		getIndicacaoFilme(col_pessoas,idpessoa, id);
+		/*System.out.println(filme);*/
 		//((Document)((ArrayList) cursor.next().get("ids")).get(0)).get("fator")
-		calculaSimilaridade(col_pessoas);
+		//calculaSimilaridade(col_pessoas);
 		mongoclient.close();		
 	}
 	public static void getLivroBaseado(MongoDatabase db, String id,MongoCollection<Document> col_pessoas){
@@ -76,9 +56,9 @@ public class Conexao {
 		MongoCursor<Document> cursor_livro = col_livros.find().iterator();
 		while(cursor_livro.hasNext()){
 			Document l = cursor_livro.next();
-			ArrayList livros = (ArrayList)l.get("autor");
-			for(int i = 0; i < livros.size(); i++){
-				if(((String)livros.get(i)).equals((String)(autores.get(0)))){
+			ArrayList livros_autores = (ArrayList)l.get("autor");
+			for(int i = 0; i < livros_autores.size(); i++){
+				if(((String)livros_autores.get(i)).equals((String)(autores.get(0)))){
 					System.out.println(l.get("titulo"));				
 				}
 			}
@@ -93,12 +73,14 @@ public class Conexao {
 		ArrayList list_semelhante = (ArrayList) pessoa_atual.get("similar");
 		ComparatorDoc comparator = new ComparatorDoc();
 		Collections.sort(list_semelhante, comparator);
+		System.out.println(list_semelhante);
 	
 		return (String) ((Document)list_semelhante.get(0)).get("id"); //mudar para o que tiver no documento
 	
 	}
 	public static String getIndicacaoLivro(MongoCollection<Document> col_pessoas, String idpessoa, String id){
-		int encontrou = 0;
+		int encontrou = 0,nLivros = 0;
+		ArrayList<String> LivroRecomendacao = new ArrayList();
 		Document pessoa_atual = col_pessoas.find(eq("id",id)).first();
 		ArrayList livros_lidos = (ArrayList)pessoa_atual.get("livro");
 		//System.out.println(livros_lidos);
@@ -118,19 +100,22 @@ public class Conexao {
 					encontrou = 1;
 				}	
 			}
-			if(encontrou == 0)
-				return (String) ((Document)list_livro.get(i)).get("nome");
+			if(encontrou == 0 && nLivros < 6){
+				LivroRecomendacao.add((String) ((Document)list_livro.get(i)).get("nome"));
+				nLivros++;
+			}	
+			
 			encontrou = 0;
 		}
-		
+		System.out.println(LivroRecomendacao);
 		return null;
 
 	  
 		
 	}
 	public static String getIndicacaoFilme(MongoCollection<Document> col_pessoas, String idpessoa, String id){
-		int encontrou = 0, nLivros = 0;
-		ArrayList LivroRecomendacao = new ArrayList();
+		int encontrou = 0, nFilmes = 0;
+		ArrayList FilmeRecomendacao = new ArrayList();
 		Document pessoa_atual = col_pessoas.find(eq("id",id)).first();
 		ArrayList filmes_vistos = (ArrayList)pessoa_atual.get("filme");
 		System.out.println(filmes_vistos);
@@ -150,26 +135,22 @@ public class Conexao {
 					encontrou = 1;
 				}	
 			}
-			if(encontrou == 0 && nLivros < 6){
-				LivroRecomendacao.add((String) ((Document)list_filme.get(i)).get("nome"));
-				nLivros++;
+			if(encontrou == 0 && nFilmes < 6){
+				FilmeRecomendacao.add((String) ((Document)list_filme.get(i)).get("nome"));
+				nFilmes++;
 			}
 			encontrou = 0;
 		}
-		
+		System.out.println(FilmeRecomendacao.toString());
 		return null;
 		
 		
 	}
 	public static void calculaSimilaridade(MongoCollection<Document> col_pessoas){
-		/*DBObject eachObject = new BasicDBObject();
-		eachObject.put("$each", new String[]{"Introduction Of Spring Framework","Expert One-on-One J2EE Development without EJB"});
-		modifiedObject.put("$push", new BasicDBObject().append("similar", eachObject));
-		lotusCollection.update(searchObject, modifiedObject);*/
 		Float somaNotas =  0.0f, media = 0.0f, nfilmesuniao = 0.0f, nfilmesinter = 0.0f;
 		Float fator = 0.0f;
 		
-		//System.out.println("npessoas" + npessoas);
+		
 		MongoCursor<Document> cursor = col_pessoas.find().iterator();
 		
 		while(cursor.hasNext()){
