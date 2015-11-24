@@ -49,8 +49,8 @@ public class Conexao {
 		
 		//MongoCollection<Document> col_pessoas = db.getCollection("pessoa");
 		MongoCollection<Document> col_pessoas =  db.getCollection("pessoas");
-		idpessoa = getPessoaSemelhante(col_pessoas, id);
-		
+		/*idpessoa = getPessoaSemelhante(col_pessoas, id);
+		System.out.println(idpessoa);
 		//idpessoa = "279855";
 	
 		livro = getIndicacaoLivro(col_pessoas, idpessoa,id);
@@ -60,7 +60,7 @@ public class Conexao {
 		/*String filme = getIndicacaoFilme(col_pessoas,idpessoa, id);
 		System.out.println(filme);*/
 		//((Document)((ArrayList) cursor.next().get("ids")).get(0)).get("fator")
-		//calculaSimilaridade(col_pessoas);
+		calculaSimilaridade(col_pessoas);
 		mongoclient.close();		
 	}
 	public static void getLivroBaseado(MongoDatabase db, String id,MongoCollection<Document> col_pessoas){
@@ -178,7 +178,7 @@ public class Conexao {
 			ArrayList filmes = (ArrayList)pessoa.get("filme");
 			int nfilmes = filmes.size(); //numero de filmes que pessoa viu
 			if(nfilmes  != 0){
-				//System.out.println("idddddd" + id);
+				System.out.println("idddddd" + id);
 				MongoCursor<Document> cursorpessoas = col_pessoas.find(ne("id",id)).iterator();
 				while(cursorpessoas.hasNext()){
 					Document proxima_pessoa = cursorpessoas.next();
@@ -222,13 +222,13 @@ public class Conexao {
 						}else{
 							fator = 0.0f;
 						}
-						System.out.println("id "+  id + " id_proximo " + id_proximo +"fator" + fator);
+						//System.out.println("id "+  id + " id_proximo " + id_proximo +"fator" + fator);
 						
-						/*BasicDBObject docToInsert = new BasicDBObject("fator", fator);
+						BasicDBObject docToInsert = new BasicDBObject("fator", fator);
 						docToInsert.put("id", id_proximo);
 						BasicDBObject updateQuery = new BasicDBObject("id", id);
-						BasicDBObject updateCommand = new BasicDBObject("$push", new BasicDBObject("pessoas.similar", docToInsert));
-						col_pessoas.updateOne(updateQuery, updateCommand);*/
+						BasicDBObject updateCommand = new BasicDBObject("$push", new BasicDBObject("similar", docToInsert));
+						col_pessoas.updateOne(updateQuery, updateCommand);
 					}
 				}
 			}
