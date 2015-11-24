@@ -69,14 +69,16 @@ public class Conexao {
 		
 	}
 	public static String getPessoaSemelhante(MongoCollection<Document> col_pessoas, String id){
+		//Procura por pessoa que deseja recomendacao
 		Document pessoa_atual = col_pessoas.find(eq("id",id)).first();
-
+		//Salva uma lista de todos os similares
 		ArrayList list_semelhante = (ArrayList) pessoa_atual.get("similar");
 		ComparatorDoc comparator = new ComparatorDoc();
+		//Ordena lista de similares de maneira decrescente 
 		Collections.sort(list_semelhante, comparator);
 		
-	
-		return (String) ((Document)list_semelhante.get(0)).get("id"); //mudar para o que tiver no documento
+		//Retorna primeiro elemento da lista (mais similar)
+		return (String) ((Document)list_semelhante.get(0)).get("id");
 	
 	}
 	public static String getIndicacaoLivro(MongoCollection<Document> col_pessoas, String idpessoa, String id){
