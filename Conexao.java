@@ -54,7 +54,30 @@ public class Conexao {
 		mongoclient.close();		
 	}
 	public static void getLivroBaseado(MongoDatabase db, String id,MongoCollection<Document> col_pessoas){
+<<<<<<< HEAD
 
+=======
+//		ArrayList final_list;
+//		Document pessoa_atual = col_pessoas.find(eq("id",id)).first();
+//		ArrayList filmes = (ArrayList)pessoa_atual.get("filme");
+//		ComparatorNota comparatorfilme = new ComparatorNota();
+//		Collections.sort(filmes, comparatorfilme);
+//		
+//	
+//		ArrayList autores = (ArrayList)((Document) filmes.get(0)).get("autor");
+//	
+//		MongoCollection<Document> col_livros =  db.getCollection("livros");
+//		MongoCursor<Document> cursor_livro = col_livros.find().iterator();
+//		while(cursor_livro.hasNext()){
+//			Document l = cursor_livro.next();
+//			ArrayList livros_autores = (ArrayList)l.get("autor");
+//			for(int i = 0; i < livros_autores.size(); i++){
+//				if(((String)livros_autores.get(i)).equals((String)(autores.get(0)))){
+//					System.out.println(l.get("titulo"));				
+//				}
+//			}
+//		}
+>>>>>>> 7a3b76dd86a9b62d275e5c65b7c6ed3a0ae9096c
 		
         Document pessoa_atual = col_pessoas.find(eq("id",id)).first();
         if (pessoa_atual != null){
