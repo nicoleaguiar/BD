@@ -30,7 +30,7 @@ public class Conexao {
 		//MongoCollection<Document> col_pessoas = db.getCollection("pessoa");
 		MongoCollection<Document> col_pessoas =  db.getCollection("pessoas");
 		idpessoa = getPessoaSemelhante(col_pessoas, id);
-		System.out.println(idpessoa);
+		
 		//idpessoa = "279855";
 	
 		livro = getIndicacaoLivro(col_pessoas, idpessoa,id);
@@ -50,6 +50,7 @@ public class Conexao {
 		ComparatorNota comparatorfilme = new ComparatorNota();
 		Collections.sort(filmes, comparatorfilme);
 		
+	
 		ArrayList autores = (ArrayList)((Document) filmes.get(0)).get("autor");
 	
 		MongoCollection<Document> col_livros =  db.getCollection("livros");
@@ -69,11 +70,11 @@ public class Conexao {
 	}
 	public static String getPessoaSemelhante(MongoCollection<Document> col_pessoas, String id){
 		Document pessoa_atual = col_pessoas.find(eq("id",id)).first();
-		System.out.println(pessoa_atual);
+
 		ArrayList list_semelhante = (ArrayList) pessoa_atual.get("similar");
 		ComparatorDoc comparator = new ComparatorDoc();
 		Collections.sort(list_semelhante, comparator);
-		System.out.println(list_semelhante);
+		
 	
 		return (String) ((Document)list_semelhante.get(0)).get("id"); //mudar para o que tiver no documento
 	
@@ -81,19 +82,22 @@ public class Conexao {
 	public static String getIndicacaoLivro(MongoCollection<Document> col_pessoas, String idpessoa, String id){
 		int encontrou = 0,nLivros = 0;
 		ArrayList<String> LivroRecomendacao = new ArrayList();
+		//Encontra pessoa com id informado
 		Document pessoa_atual = col_pessoas.find(eq("id",id)).first();
+		//Salva array de livros da pessoa que sera gerada a recomendacao
 		ArrayList livros_lidos = (ArrayList)pessoa_atual.get("livro");
-		//System.out.println(livros_lidos);
-	
+
+		//Encontra a pessoa similar
 		Document pessoa_similar = col_pessoas.find(eq("id",idpessoa)).first();
+		//Salva array de livros da pessoa similar
 		ArrayList list_livro = (ArrayList)pessoa_similar.get("livro");
-	
+		
 		ComparatorNota comparatorlivro = new ComparatorNota();
+		//Ordena de maneira decrescente de acordo com a nota os livros da pessoa similar
 		Collections.sort(list_livro, comparatorlivro);
-		System.out.println(list_livro);
 		
-		
-		
+		//Percorre os arrays de livros buscando os livros da pessoa similar que a pessoa
+		//para a qual a recomendacao sera gerada e salva os que ela ainda nao leu
 		for(int i = 0; i < list_livro.size(); i++){
 			for(int j = 0; j < livros_lidos.size();j++){
 				if(((String) ((Document)livros_lidos.get(j)).get("isbn")).equals((String) ((Document)list_livro.get(i)).get("isbn"))){
@@ -116,19 +120,22 @@ public class Conexao {
 	public static String getIndicacaoFilme(MongoCollection<Document> col_pessoas, String idpessoa, String id){
 		int encontrou = 0, nFilmes = 0;
 		ArrayList FilmeRecomendacao = new ArrayList();
+		//Encontra pessoa com id informado
 		Document pessoa_atual = col_pessoas.find(eq("id",id)).first();
+		//Salva array de filmes da pessoa similar
 		ArrayList filmes_vistos = (ArrayList)pessoa_atual.get("filme");
-		System.out.println(filmes_vistos);
-	
+
+		//Encontra a pessoa similar
 		Document pessoa_similar = col_pessoas.find(eq("id",idpessoa)).first();
+		//Salva array de filmes da pessoa similar
 		ArrayList list_filme = (ArrayList)pessoa_similar.get("filme");
 	
 		ComparatorNota comparatorlivro = new ComparatorNota();
+		//Ordena de maneira decrescente de acordo com a nota os filmes da pessoa similar
 		Collections.sort(list_filme, comparatorlivro);
-		System.out.println(list_filme);
-		
-		
-		
+	
+		//Percorre os arrays de filmes buscando os filmes da pessoa similar que a pessoa
+		//para a qual a recomendacao sera gerada e salva os que ela ainda nao viu
 		for(int i = 0; i <list_filme.size(); i++){
 			for(int j = 0; j < filmes_vistos.size();j++){
 				if(((String) ((Document)filmes_vistos.get(j)).get("imdb_id")).equals((String) ((Document)list_filme.get(i)).get("imdb_id"))){
@@ -152,18 +159,25 @@ public class Conexao {
 		
 		
 		MongoCursor<Document> cursor = col_pessoas.find().iterator();
-		
+		//Percorre todas as pessoas da colecao
 		while(cursor.hasNext()){
 			Document pessoa  = cursor.next();
+			//Salva pessoa para a qual sera calculado o fator de similaridade
 			String id = pessoa.getString("id");
+			//Salva array de filmes ja assistiu
 			ArrayList filmes = (ArrayList)pessoa.get("filme");
-			int nfilmes = filmes.size(); //numero de filmes que pessoa viu
+			//numero de filmes que pessoa assistiu
+			int nfilmes = filmes.size(); 
+			//se o numero de filmes for diferente de zero
 			if(nfilmes  != 0){
-				System.out.println("idddddd" + id);
+				//procura qualquer pessoa diferente da atual
 				MongoCursor<Document> cursorpessoas = col_pessoas.find(ne("id",id)).iterator();
+				//itera sobre ela
 				while(cursorpessoas.hasNext()){
 					Document proxima_pessoa = cursorpessoas.next();
+					//Salva seu id
 					String id_proximo = proxima_pessoa.getString("id");
+					//Salva array de filmes ja vistos
 					ArrayList filmes_pessoa_dois = (ArrayList)proxima_pessoa.get("filme");
 					if(filmes_pessoa_dois.size() != 0){
 						somaNotas = 0.0f;
@@ -173,38 +187,29 @@ public class Conexao {
 						media = 0.0f;
 						for(int i = 0; i < filmes.size(); i++){
 							for(int j = 0; j < filmes_pessoa_dois.size();j++){
-								//sSystem.out.println(((String) ((Document)livros_lidos.get(j)).get("nome")));
-							
+								//Procura filme que ambas as pessoas assistiram					
 								if(((String) ((Document)filmes_pessoa_dois.get(j)).get("imdb_id")).equals((String) ((Document)filmes.get(i)).get("imdb_id"))){
+									//Incrementa intersecao de filmes
 									nfilmesinter = nfilmesinter + 1;
-									//System.out.println("interseccao" + nfilmesinter);
-									//System.out.println("nota de 1 "+ Float.parseFloat(((String) ((Document)filmes_pessoa_dois.get(j)).get("nota"))));
-									//System.out.println("nota de 2" + Float.parseFloat((String) ((Document)filmes.get(i)).get("nota")));
-									//System.out.println("soma das notas antes" + somaNotas);
-									//System.out.println("diferenca" + Math.abs(Float.parseFloat(((String) ((Document)filmes_pessoa_dois.get(j)).get("nota"))) - Float.parseFloat((String) ((Document)filmes.get(i)).get("nota"))));
-								
-									//System.out.println("nota de 1" + Integer.parseInt((String) ((Document)filmes_pessoa_dois.get(j)).get("nota")));
+									//Soma as diferencas entre as notas
 									somaNotas = somaNotas + Math.abs(Float.parseFloat(((String) ((Document)filmes_pessoa_dois.get(j)).get("nota"))) - Float.parseFloat((String) ((Document)filmes.get(i)).get("nota")));
-								//System.out.println("soma das notas depois" + somaNotas);
+								
 								}	
 							}
-							//System.out.println("somaNotas" + somaNotas);
-							//System.out.println("nfilmesinter" + nfilmesinter);
 						}
+						//Calcula a uniao dos filmes
 						nfilmesuniao = filmes.size() + filmes_pessoa_dois.size() - nfilmesinter;
-						//System.out.println("nfilmesuniao" + nfilmesuniao);
-						
+						//Calcula a media das notas
 						if(nfilmesinter != 0){
 							media = somaNotas/nfilmesinter;	
 						}
-						//System.out.println("media" + media);
+						//Calcula fator de similaridade
 						if(nfilmesuniao != 0 && nfilmesinter != 0){
 							fator = (nfilmes/nfilmesuniao)*(1 - (media/10));
 						}else{
 							fator = 0.0f;
 						}
-						//System.out.println("id "+  id + " id_proximo " + id_proximo +"fator" + fator);
-						
+						//Atualiza vetor similar
 						BasicDBObject docToInsert = new BasicDBObject("fator", fator);
 						docToInsert.put("id", id_proximo);
 						BasicDBObject updateQuery = new BasicDBObject("id", id);
