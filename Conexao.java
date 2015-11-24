@@ -44,27 +44,80 @@ public class Conexao {
 		mongoclient.close();		
 	}
 	public static void getLivroBaseado(MongoDatabase db, String id,MongoCollection<Document> col_pessoas){
-		ArrayList final_list;
-		Document pessoa_atual = col_pessoas.find(eq("id",id)).first();
-		ArrayList filmes = (ArrayList)pessoa_atual.get("filme");
-		ComparatorNota comparatorfilme = new ComparatorNota();
-		Collections.sort(filmes, comparatorfilme);
+//		ArrayList final_list;
+//		Document pessoa_atual = col_pessoas.find(eq("id",id)).first();
+//		ArrayList filmes = (ArrayList)pessoa_atual.get("filme");
+//		ComparatorNota comparatorfilme = new ComparatorNota();
+//		Collections.sort(filmes, comparatorfilme);
+//		
+//	
+//		ArrayList autores = (ArrayList)((Document) filmes.get(0)).get("autor");
+//	
+//		MongoCollection<Document> col_livros =  db.getCollection("livros");
+//		MongoCursor<Document> cursor_livro = col_livros.find().iterator();
+//		while(cursor_livro.hasNext()){
+//			Document l = cursor_livro.next();
+//			ArrayList livros_autores = (ArrayList)l.get("autor");
+//			for(int i = 0; i < livros_autores.size(); i++){
+//				if(((String)livros_autores.get(i)).equals((String)(autores.get(0)))){
+//					System.out.println(l.get("titulo"));				
+//				}
+//			}
+//		}
 		
-	
-		ArrayList autores = (ArrayList)((Document) filmes.get(0)).get("autor");
-	
-		MongoCollection<Document> col_livros =  db.getCollection("livros");
-		MongoCursor<Document> cursor_livro = col_livros.find().iterator();
-		while(cursor_livro.hasNext()){
-			Document l = cursor_livro.next();
-			ArrayList livros_autores = (ArrayList)l.get("autor");
-			for(int i = 0; i < livros_autores.size(); i++){
-				if(((String)livros_autores.get(i)).equals((String)(autores.get(0)))){
-					System.out.println(l.get("titulo"));				
-				}
-			}
-		}
-		
+        Document pessoa_atual = col_pessoas.find(eq("id",id)).first();
+        if (pessoa_atual != null){
+            // Ordena filmes por nota
+            ArrayList filmes = (ArrayList)pessoa_atual.get("filme");
+            Collections.sort(filmes, new ComparatorNota());
+            
+            //Obtendo array de autores de livros nao lidos
+            ArrayList livrosDeFilmes = new ArrayList();
+            
+            int end ;
+            if (filmes != null){
+                if (filmes.size() > 10){
+                    end = 5;
+                } else {
+                    end = filmes.size();
+                }
+                
+                MongoCollection<Document> col_livros =  db.getCollection("livros");
+                // Percorre os 5 filmes mais bem avaliados verificando se existem livros para recomendar a partir deles
+                for (int i = 0; i < end; i++){
+                    //imdb_id do i-esimo filme mais bem avaliado pelo usuario
+                    String imdb_id_filme =  (String) ((Document)filmes.get(i)).get("imdb_id");
+                    
+                    //Procura o filme avaliado na colecao de filmes
+                    Document filme_info =  db.getCollection("filmes").find(eq("imdb_id", imdb_id_filme)).first();
+                    if (filme_info != null){
+                        
+                        //Obtem lista de autores do livro que originou o filme
+                        ArrayList autorLivro = (ArrayList)((Document) filme_info).get("autor");
+                        if (autorLivro != null && autorLivro.size() > 0){
+                            //Obtem o nome do autor principal
+                            String autorNome = (String) autorLivro.get(0);
+                            
+                            //Procura pelos livros desse autor
+                            MongoCursor<Document> cursor_livro = col_livros.find().iterator();
+                            while(cursor_livro.hasNext()){
+                                Document l = cursor_livro.next();
+                                ArrayList autores_livro = (ArrayList)l.get("autor");
+                                if (autores_livro != null){
+                                    for(int j = 0; i < autores_livro.size(); i++){
+                                        if(((String)autores_livro.get(j)).equals(autorNome)){
+                                            livrosDeFilmes.add(l);
+                                            System.out.println(l.get("titulo"));				
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    
+                }
+            }
+        }
 		
 		
 	}
